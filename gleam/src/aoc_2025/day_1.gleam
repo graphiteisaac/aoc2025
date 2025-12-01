@@ -1,3 +1,4 @@
+import gleam/float
 import gleam/int
 import gleam/list
 import gleam/result
@@ -37,5 +38,35 @@ pub fn pt_1(input: List(Rotation)) {
 }
 
 pub fn pt_2(input: List(Rotation)) {
-  todo as "part 2 not implemented"
+  list.fold(input, #(0, 50), fn(accum, rotation) {
+    let current_position = accum.1
+
+    case rotation {
+      Left(turns) -> {
+        let updated = current_position - turns
+        let new_position = updated % 100
+        let num_zeroes =
+          case current_position {
+            0 -> float.ceiling(int.to_float(updated) /. 100.0)
+            _ -> float.floor(int.to_float(updated) /. 100.0)
+          }
+          |> float.round
+          |> int.negate
+
+        case new_position {
+          n if n > 0 -> #(accum.0 + num_zeroes, new_position)
+          n if n == 0 -> #(accum.0 + num_zeroes + 1, new_position)
+          _ -> #(accum.0 + num_zeroes, 100 + new_position)
+        }
+      }
+      Right(turns) -> {
+        let updated = turns + current_position
+        let num_zeroes =
+          float.floor(int.to_float(updated) /. 100.0)
+          |> float.round
+
+        #(accum.0 + num_zeroes, updated % 100)
+      }
+    }
+  }).0
 }
