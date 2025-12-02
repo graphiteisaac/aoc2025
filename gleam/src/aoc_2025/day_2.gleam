@@ -55,5 +55,43 @@ fn do_pt1(input: List(ProductRange), sum: Int) {
 }
 
 pub fn pt_2(input: List(ProductRange)) {
-  todo as "part 2 not implemented"
+  do_pt2(input, 0)
+}
+
+fn get_divisors(n: Int) -> List(Int) {
+  // echo #(n, n / 2, list.range(1, n / 2))
+  use digit <- list.filter(list.range(1, n / 2))
+  n % digit == 0
+}
+
+fn is_invalid_repeating(num_string: String) -> Bool {
+  let total_len = string.length(num_string)
+
+  get_divisors(total_len)
+  |> list.any(fn(pattern_len) {
+    let pattern = string.slice(num_string, 0, pattern_len)
+    let repetitions = total_len / pattern_len
+    let repeated = string.repeat(pattern, repetitions)
+    repeated == num_string
+  })
+}
+
+fn do_pt2(input: List(ProductRange), sum: Int) {
+  case input {
+    [] -> sum
+    [head, ..rest] -> {
+      let new_sum =
+        list.fold(list.range(head.start, head.end), sum, fn(accum, item) {
+          let string_of = int.to_string(item)
+
+          case is_invalid_repeating(string_of), string.length(string_of) {
+            _, 1 -> accum
+            True, _ -> accum + item
+            False, _ -> accum
+          }
+        })
+
+      do_pt2(rest, new_sum)
+    }
+  }
 }
