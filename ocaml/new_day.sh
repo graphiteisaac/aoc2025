@@ -1,5 +1,5 @@
 #!/bin/bash
-DAY=$1
+DAY=$(printf "%02d" $1)
 mkdir -p bin/day$DAY
 cat > bin/day$DAY/dune << EOF
 (executable
@@ -16,11 +16,11 @@ let solve_part2 input =
   0
 
 let () =
-  let input = Helpers.read_file "input/day$DAY.txt" in
+  (* Remove '.example' below to run on the real input data *)
+
+  let input = Helpers.read_file "../gleam/input/2025/$DAY.example.txt" in
   Printf.printf "Part 1: %d\n" (solve_part1 input);
   Printf.printf "Part 2: %d\n" (solve_part2 input)
 EOF
 
-mkdir -p input
-touch input/day$DAY.txt
 echo "Created day$DAY"
