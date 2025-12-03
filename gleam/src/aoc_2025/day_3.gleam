@@ -1,5 +1,6 @@
 import gleam/int
 import gleam/list
+import gleam/result
 import gleam/string
 
 pub type BatteryBank {
@@ -40,6 +41,51 @@ pub fn pt_1(input: List(BatteryBank)) -> Int {
   |> list.fold(0, fn(acc, bank) { acc + bank.max_joltage })
 }
 
-pub fn pt_2(_input: List(BatteryBank)) -> Int {
-  0
+fn greedy_select(
+  remaining: List(Int),
+  output: String,
+  current_index: Int,
+  total_count: Int,
+) -> String {
+  let target_count = 12
+  case string.length(output) == target_count {
+    True -> output
+    False -> {
+      let needed = target_count - string.length(output)
+      let available = total_count - current_index
+
+      let max_skip = available - needed
+      let #(best_digit, skip_count) =
+        remaining
+        |> list.take(max_skip + 1)
+        |> list.index_map(fn(digit, idx) { #(digit, idx) })
+        |> list.fold(#(-1, 0), fn(best, current) {
+          case current.0 > best.0 {
+            True -> current
+            False -> best
+          }
+        })
+
+      let new_remaining = list.drop(remaining, skip_count + 1)
+      greedy_select(
+        new_remaining,
+        output <> int.to_string(best_digit),
+        current_index + skip_count + 1,
+        total_count,
+      )
+    }
+  }
+}
+
+pub fn pt_2(input: List(BatteryBank)) -> Int {
+  input
+  |> list.map(fn(bank) {
+    let total_count = list.length(bank.batteries)
+
+    bank.batteries
+    |> greedy_select("", 0, total_count)
+    |> int.parse
+    |> result.unwrap(0)
+  })
+  |> list.fold(0, int.add)
 }
