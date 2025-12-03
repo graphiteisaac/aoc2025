@@ -59,7 +59,52 @@ let solve_part1 (input : product_range list) =
   in
   loop 0 input
 
-let solve_part2 _input = 0
+let get_divisors n =
+  let upper = n / 2 in
+  let rec collect i acc =
+    if i > upper then
+      acc
+    else if n mod i = 0 then
+      collect (i + 1) (i :: acc)
+    else
+      collect (i + 1) acc
+  in
+  collect 1 [] |> List.rev
+
+let is_invalid_repeating s =
+  let total_len = String.length s in
+  get_divisors total_len
+  |> List.exists (fun pattern_len ->
+         let pattern = String.sub s 0 pattern_len in
+         let repetitions = total_len / pattern_len in
+
+         (* Thanks internet for this hack lol *)
+         let buf = Bytes.create total_len in
+         for i = 0 to repetitions - 1 do
+           Bytes.blit_string pattern 0 buf (i * pattern_len) pattern_len
+         done;
+
+         Bytes.to_string buf = s)
+
+let solve_part2 (input : product_range list) =
+  let rec loop acc = function
+    | [] -> acc
+    | range :: rest ->
+        let start_ = int_of_string range.left in
+        let end_ = int_of_string range.right in
+        let new_acc = ref acc in
+
+        iter_range start_ end_ (fun item ->
+            let str = string_of_int item in
+            let len = String.length str in
+            match (is_invalid_repeating str, len) with
+            | _, 1 -> ()
+            | true, _ -> new_acc := !new_acc + item
+            | false, _ -> ());
+
+        loop !new_acc rest
+  in
+  loop 0 input
 
 let () =
   let input = Helpers.read_file "../gleam/input/2025/2.txt" |> parse in
