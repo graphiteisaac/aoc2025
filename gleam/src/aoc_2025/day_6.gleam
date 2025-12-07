@@ -29,12 +29,7 @@ pub fn pt_1(input: #(List(Operation), List(String))) {
     lines
     |> list.map(fn(s) {
       string.split(s, " ")
-      |> list.filter_map(fn(x) {
-        case x {
-          " " -> Error(Nil)
-          n -> int.parse(n)
-        }
-      })
+      |> list.filter_map(int.parse)
     })
     |> list.transpose
     |> list.zip(ops)
@@ -49,5 +44,21 @@ pub fn pt_1(input: #(List(Operation), List(String))) {
 }
 
 pub fn pt_2(input: #(List(Operation), List(String))) {
-  todo as "part 2 not implemented"
+  let #(ops, lines) = input
+  let sheets =
+    lines
+    |> list.map(fn(s) {
+      string.split(s, " ")
+      |> list.filter_map(int.parse)
+    })
+    |> list.transpose
+    |> list.zip(ops)
+
+  use acc, #(numbers, op) <- list.fold(sheets, 0)
+
+  acc
+  + case op {
+    Add -> int.sum(numbers)
+    Multiply -> int.product(numbers)
+  }
 }
