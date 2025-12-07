@@ -49,6 +49,20 @@ pub fn pt_1(input: #(List(FreshnessRange), List(Int))) -> Int {
   })
 }
 
+fn solve_pt2(ranges: List(FreshnessRange), last_end: Int, acc: Int) {
+  case ranges {
+    [] -> acc
+    [head, ..rest] if head.end <= last_end -> solve_pt2(rest, last_end, acc)
+    [head, ..rest] if head.start <= last_end ->
+      solve_pt2(rest, head.end, acc + head.end - last_end)
+    [head, ..rest] -> solve_pt2(rest, head.end, acc + head.end - head.start + 1)
+  }
+}
+
 pub fn pt_2(input: #(List(FreshnessRange), List(Int))) {
-  todo as "part 2 not implemented"
+  let #(ranges, _) = input
+
+  ranges
+  |> list.sort(fn(a, b) { int.compare(a.start, b.start) })
+  |> solve_pt2(0, 0)
 }
