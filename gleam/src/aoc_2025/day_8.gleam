@@ -93,7 +93,7 @@ pub fn pt_1(input: List(Vec3)) {
   let circuits = list.map(input, set.insert(set.new(), _))
   let state = State(available_connections:, connections:, circuits:)
 
-  pt1_loop(state, 1000)
+  pt1_loop(state, list.length(input))
 }
 
 fn pt2_loop(state: State) {
