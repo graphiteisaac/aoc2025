@@ -113,10 +113,7 @@ pub fn pt_2(input: #(Int, set.Set(#(Int, Int)))) {
     |> list.sort(fn(a, b) { int.compare(a.0, b.0) })
 
   let beams =
-    dict.from_list(
-      list.range(0, 15)
-      |> list.map(fn(a) { #(a, 0) }),
-    )
+    dict.new()
     |> dict.insert(starting_position, 1)
 
   split_timelines(beams, 0, board)
