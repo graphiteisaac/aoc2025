@@ -1,5 +1,8 @@
 import gleam/bool
+import gleam/dict
+import gleam/int
 import gleam/list
+import gleam/option.{None, Some}
 import gleam/set
 import gleam/string
 
@@ -62,6 +65,59 @@ pub fn pt_1(input: #(Int, set.Set(#(Int, Int)))) {
   split_beams(beams, board, 0)
 }
 
+fn split_timelines(
+  beam_counters: dict.Dict(Int, Int),
+  beam_position: Int,
+  input: List(#(Int, Int)),
+) -> Int {
+  case input {
+    [] -> dict.fold(beam_counters, 0, fn(acc, _, i) { acc + i })
+
+    [first, ..rest] -> {
+      let #(y, x) = first
+
+      case dict.get(beam_counters, x), y == beam_position {
+        Ok(beam), True -> {
+          let new_counters =
+            beam_counters
+            |> dict.insert(x, 0)
+            |> dict.upsert(x - 1, fn(value) {
+              case value {
+                None -> 1
+                Some(i) -> i + beam
+              }
+            })
+            |> dict.upsert(x + 1, fn(value) {
+              case value {
+                None -> 1
+                Some(i) -> i + beam
+              }
+            })
+
+          split_timelines(new_counters, beam_position, rest)
+        }
+
+        Error(_), False ->
+          split_timelines(beam_counters, beam_position + 1, input)
+
+        _, _ -> split_timelines(beam_counters, beam_position + 1, input)
+      }
+    }
+  }
+}
+
 pub fn pt_2(input: #(Int, set.Set(#(Int, Int)))) {
-  todo as "part 2 not implemented"
+  let #(starting_position, board) = input
+  let board =
+    set.to_list(board)
+    |> list.sort(fn(a, b) { int.compare(a.0, b.0) })
+
+  let beams =
+    dict.from_list(
+      list.range(0, 15)
+      |> list.map(fn(a) { #(a, 0) }),
+    )
+    |> dict.insert(starting_position, 1)
+
+  split_timelines(beams, 0, board)
 }
