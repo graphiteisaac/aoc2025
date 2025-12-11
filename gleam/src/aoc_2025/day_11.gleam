@@ -1,60 +1,58 @@
-import gleam/bool
+import gleam/dict
+import gleam/int
 import gleam/list
-import gleam/set
+import gleam/pair
+import gleam/result
 import gleam/string
 
-pub type Server {
-  Server(id: String, outputs: List(String))
-}
-
-pub fn parse(input: String) -> List(Server) {
+pub fn parse(input: String) -> dict.Dict(String, List(String)) {
   input
   |> string.split("\n")
-  |> list.map(fn(str) {
+  |> list.fold(dict.new(), fn(acc, str) {
     let assert Ok(#(id, outputs)) = string.split_once(str, ": ")
     let outputs = string.split(outputs, " ")
 
-    Server(id:, outputs:)
+    dict.insert(acc, id, outputs)
   })
 }
 
-fn depth_search(
-  server_id: String,
-  destination: String,
-  servers: List(Server),
-  visited: set.Set(String),
-  current_path: List(String),
-) -> List(List(String)) {
-  case server_id == destination {
-    True -> [list.reverse(current_path)]
-    False -> {
-      let visited = set.insert(visited, server_id)
+fn memoised_path_search(
+  from: String,
+  target: String,
+  servers: dict.Dict(String, List(String)),
+  cache: dict.Dict(#(String, String), Int),
+) -> #(Int, dict.Dict(#(String, String), Int)) {
+  case dict.get(cache, #(from, target)) {
+    Ok(path_length) -> #(path_length, cache)
 
-      let neighbours = case
-        list.find(servers, fn(server) { server.id == server_id })
-      {
-        Ok(server) ->
-          list.filter(server.outputs, fn(neighbour) {
-            !set.contains(visited, neighbour)
-          })
-        Error(_) -> []
+    Error(Nil) -> {
+      case from == target {
+        True -> #(1, cache)
+        False -> {
+          let #(sum, cache) =
+            dict.get(servers, from)
+            |> result.unwrap([])
+            |> list.fold(#(0, cache), fn(accum, cache_from) {
+              let #(path_length, cache) = accum
+              let #(next_length, cache) =
+                memoised_path_search(cache_from, target, servers, cache)
+
+              #(path_length + next_length, cache)
+            })
+
+          #(sum, dict.insert(cache, #(from, target), sum))
+        }
       }
-
-      list.flat_map(neighbours, fn(neighbour) {
-        depth_search(neighbour, destination, servers, visited, [
-          neighbour,
-          ..current_path
-        ])
-      })
     }
   }
 }
 
-pub fn pt_1(servers: List(Server)) {
-  depth_search("you", "out", servers, set.new(), ["you"])
-  |> list.length
+pub fn pt_1(servers: dict.Dict(String, List(String))) {
+  memoised_path_search("you", "out", servers, dict.new()).0
 }
 
-pub fn pt_2(servers: List(Server)) {
-  todo as "part 2 not implemented"
+pub fn pt_2(servers: dict.Dict(String, List(String))) {
+  memoised_path_search("svr", "fft", servers, dict.new()).0
+  * memoised_path_search("fft", "dac", servers, dict.new()).0
+  * memoised_path_search("dac", "out", servers, dict.new()).0
 }
